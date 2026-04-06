@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="お買い物">
+    <title>お買い物リスト</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        :root {
+            --primary: #007AFF;
+            --success: #34C759;
+            --danger: #FF3B30;
+            --orange: #FF9500;
+            --bg: #F2F2F7;
+            --card: #FFFFFF;
+            --text: #000000;
+            --text-sub: #6C6C70;
+            --sep: #C6C6C8;
+            --checked-bg: #F0FFF4;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Yu Gothic', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding-bottom: 90px;
+        }
+
+        /* ---- HEADER ---- */
+        .header {
+            background: var(--card);
+            padding: 14px 16px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 0 var(--sep);
+        }
+        .header-top {
+            display: flex; align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        .header-title { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+        .header-actions { display: flex; gap: 6px; }
+        .btn-text {
+            background: none; border: none;
+            font-size: 15px; font-weight: 600;
+            color: var(--primary); padding: 5px 10px;
+            border-radius: 8px; cursor: pointer;
+        }
+        .btn-text.danger { color: var(--danger); }
+
+        /* Store tabs */
+        .store-tabs {
+            display: flex; gap: 6px;
+            overflow-x: auto; padding-bottom: 12px;
+            scrollbar-width: none;
+        }
+        .store-tabs::-webkit-scrollbar { display: none; }
+        .store-tab {
+            white-space: nowrap;
+            padding: 7px 16px;
+            border-radius: 20px; border: none;
+            background: var(--bg); color: var(--text-sub);
+            font-size: 14px; font-weight: 600;
+            cursor: pointer; transition: all 0.15s;
+            flex-shrink: 0;
+        }
+        .store-tab.active { background: var(--primary); color: #fff; }
+
+        /* ---- MEMO ---- */
+        .memo-wrap {
+            margin: 12px 16px 0;
+        }
+        .memo-textarea {
+            width: 100%;
+            min-height: 52px;
+            max-height: 140px;
+            padding: 11px 14px;
+            border: 1.5px solid var(--sep);
+            border-radius: 14px;
+            font-size: 15px;
+            font-family: inherit;
+            background: var(--card);
+            color: var(--text);
+            outline: none;
+            resize: none;
+            line-height: 1.5;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            box-shadow: 0 1px 3px rgba(0,0,0,.05);
+            overflow-y: auto;
+        }
+        .memo-textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0,122,255,.12);
+        }
+        .memo-textarea::placeholder { color: #AEAEB2; }
+
+        /* ---- CONTENT ---- */
+        .content { padding: 12px 16px; }
+
+        /* ---- SECTION ---- */
+        .section {
+            background: var(--card);
+            border-radius: 14px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,.06);
+        }
+        .section-header {
+            padding: 9px 16px;
+            font-size: 12px; font-weight: 700;
+            color: var(--text-sub);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            background: #FAFAFA;
+            border-bottom: 1px solid var(--sep);
+            display: flex; align-items: center; gap: 6px;
+        }
+        .checked-badge {
+            background: var(--success); color: #fff;
+            font-size: 11px; font-weight: 700;
+            padding: 1px 7px; border-radius: 10px;
+        }
+
+        /* ---- ITEM ROW ---- */
+        .item-row {
+            display: flex; align-items: center;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--sep);
+            gap: 10px;
+            transition: background 0.15s;
+            min-height: 60px;
+        }
+        .item-row:last-child { border-bottom: none; }
+        .item-row.checked { background: var(--checked-bg); }
+
+        /* Checkbox circle */
+        .item-check {
+            width: 26px; height: 26px;
+            border-radius: 50%;
+            border: 2px solid var(--sep);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; flex-shrink: 0;
+            transition: all 0.15s;
+            font-size: 14px; color: transparent;
+        }
+        .item-check.checked {
+            background: var(--success);
+            border-color: var(--success);
+            color: #fff;
+        }
+
+        /* Item info */
+        .item-info { flex: 1; min-width: 0; }
+        .item-name {
+            font-size: 16px; font-weight: 500;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .item-name.checked { text-decoration: line-through; color: var(--text-sub); }
+        .item-meta { font-size: 12px; color: var(--text-sub); margin-top: 1px; }
+        .always-star {
+            font-size: 11px; color: var(--orange);
+            flex-shrink: 0;
+        }
+
+        /* ---- QTY WRAP (buy + inventory stacked) ---- */
+        .qty-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        /* Buy quantity row */
+        .qty-controls { display: flex; align-items: center; gap: 4px; }
+        .qty-btn {
+            width: 30px; height: 30px;
+            border-radius: 50%; border: none;
+            font-size: 20px; font-weight: 400;
+            cursor: pointer; display: flex;
+            align-items: center; justify-content: center;
+            line-height: 1; flex-shrink: 0;
+            transition: transform 0.1s;
+        }
+        .qty-btn:active { transform: scale(0.9); }
+        .qty-btn.plus  { background: var(--primary); color: #fff; }
+        .qty-btn.minus { background: #E5E5EA; color: var(--text-sub); }
+        .qty-display {
+            font-size: 14px; font-weight: 700;
+            min-width: 44px; text-align: center;
+            color: var(--text);
+        }
+
+        /* Inventory row (nested inside qty-wrap) */
+        .inv-row {
+            display: flex; align-items: center; gap: 3px;
+            background: #EFEFF4;
+            border-radius: 10px;
+            padding: 3px 7px;
+        }
+        .inv-label {
+            font-size: 10px; font-weight: 700;
+            color: var(--text-sub); letter-spacing: 0.3px;
+            margin-right: 2px;
+        }
+        .inv-btn {
+            width: 20px; height: 20px;
+            border-radius: 50%; border: 1px solid #C6C6C8;
+            background: var(--card);
+            font-size: 15px; font-weight: 400;
+            cursor: pointer; display: flex;
+            align-items: center; justify-content: center;
+            line-height: 1; flex-shrink: 0;
+            color: var(--text-sub);
+            transition: transform 0.1s;
+        }
+        .inv-btn:active { transform: scale(0.88); }
+        .inv-display {
+            font-size: 13px; font-weight: 700;
+            min-width: 30px; text-align: center;
+            color: var(--text);
+        }
+
+        /* Edit action buttons */
+        .item-edit-btns { display: flex; gap: 6px; flex-shrink: 0; }
+        .btn-edit-sm, .btn-del-sm {
+            width: 32px; height: 32px;
+            border-radius: 8px; border: none;
+            cursor: pointer; font-size: 15px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .btn-edit-sm { background: #E3F0FF; }
+        .btn-del-sm  { background: #FFECEC; }
+
+        /* ---- FAB ---- */
+        .fab {
+            position: fixed; bottom: 28px; right: 20px;
+            width: 58px; height: 58px;
+            border-radius: 50%; background: var(--primary);
+            color: #fff; border: none;
+            font-size: 30px; cursor: pointer;
+            box-shadow: 0 4px 18px rgba(0,122,255,.45);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 200; transition: transform 0.15s;
+        }
+        .fab:active { transform: scale(0.93); }
+
+        /* ---- MODAL ---- */
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,.45);
+            z-index: 1000;
+            display: none; align-items: flex-end; justify-content: center;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal {
+            background: var(--card);
+            border-radius: 22px 22px 0 0;
+            width: 100%; max-height: 92vh;
+            overflow-y: auto;
+            padding: 20px 20px 44px;
+            animation: slideUp 0.25s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(60px); opacity: 0; }
+            to   { transform: translateY(0);    opacity: 1; }
+        }
+        .modal-handle {
+            width: 40px; height: 4px;
+            background: var(--sep); border-radius: 2px;
+            margin: 0 auto 16px;
+        }
+        .modal-header {
+            display: flex; align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .modal-title { font-size: 19px; font-weight: 700; }
+        .modal-close {
+            background: var(--bg); border: none;
+            width: 30px; height: 30px;
+            border-radius: 50%; font-size: 16px;
+            cursor: pointer; color: var(--text-sub);
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* Form */
+        .form-group { margin-bottom: 18px; }
+        .form-label {
+            display: block; font-size: 13px; font-weight: 700;
+            color: var(--text-sub); margin-bottom: 7px;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .form-input, .form-select {
+            width: 100%; padding: 13px 14px;
+            border: 1.5px solid var(--sep);
+            border-radius: 12px; font-size: 16px;
+            font-family: inherit; background: var(--bg);
+            color: var(--text); outline: none;
+            transition: border-color 0.15s;
+            appearance: none; -webkit-appearance: none;
+        }
+        .form-input:focus, .form-select:focus {
+            border-color: var(--primary); background: #fff;
+        }
+        .select-wrap { position: relative; }
+        .select-wrap::after {
+            content: '▾'; position: absolute;
+            right: 14px; top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-sub); pointer-events: none;
+        }
+        .store-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+        .store-chip-input { display: none; }
+        .store-chip-label {
+            padding: 8px 16px; border-radius: 20px;
+            border: 1.5px solid var(--sep);
+            font-size: 14px; font-weight: 500;
+            cursor: pointer; transition: all 0.15s;
+            user-select: none;
+        }
+        .store-chip-input:checked + .store-chip-label {
+            background: var(--primary); color: #fff; border-color: var(--primary);
+        }
+
+        /* Toggle switch (毎回買う) */
+        .toggle-row {
+            display: flex; align-items: center;
+            justify-content: space-between;
+            background: var(--bg);
+            border-radius: 12px;
+            padding: 13px 16px;
+            cursor: pointer;
+        }
+        .toggle-row-left {
+            display: flex; align-items: center; gap: 8px;
+        }
+        .toggle-row-icon { font-size: 20px; }
+        .toggle-row-text { font-size: 15px; font-weight: 600; }
+        .toggle-row-sub  { font-size: 12px; color: var(--text-sub); margin-top: 1px; }
+        .toggle-input { display: none; }
+        .toggle-switch {
+            width: 51px; height: 31px;
+            border-radius: 16px;
+            background: #E5E5EA;
+            position: relative; flex-shrink: 0;
+            transition: background 0.2s;
+        }
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 3px; left: 3px;
+            width: 25px; height: 25px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 2px 6px rgba(0,0,0,.25);
+            transition: transform 0.2s;
+        }
+        .toggle-input:checked ~ .toggle-switch {
+            background: var(--orange);
+        }
+        .toggle-input:checked ~ .toggle-switch::after {
+            transform: translateX(20px);
+        }
+
+        .btn-primary {
+            width: 100%; padding: 15px;
+            background: var(--primary); color: #fff;
+            border: none; border-radius: 14px;
+            font-size: 17px; font-weight: 700;
+            cursor: pointer; margin-top: 4px;
+            transition: opacity 0.15s;
+        }
+        .btn-primary:active { opacity: 0.85; }
+        .btn-secondary {
+            width: 100%; padding: 13px;
+            background: var(--bg); color: var(--primary);
+            border: 1.5px solid var(--primary);
+            border-radius: 14px; font-size: 16px; font-weight: 600;
+            cursor: pointer; margin-bottom: 10px;
+        }
+        .btn-danger-outline {
+            width: 100%; padding: 13px;
+            background: var(--bg); color: var(--danger);
+            border: 1.5px solid var(--danger);
+            border-radius: 14px; font-size: 16px; font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Empty state */
+        .empty-state { text-align: center; padding: 50px 20px; color: var(--text-sub); }
+        .empty-icon  { font-size: 52px; margin-bottom: 12px; }
+        .empty-title { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
+        .empty-sub   { font-size: 14px; }
+
+        /* Toast */
+        .toast {
+            position: fixed; bottom: 110px; left: 50%;
+            transform: translateX(-50%) translateY(10px);
+            background: rgba(30,30,30,.9); color: #fff;
+            padding: 10px 22px; border-radius: 22px;
+            font-size: 14px; font-weight: 500;
+            z-index: 3000; opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+            white-space: nowrap; pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        .modal-divider { border: none; border-top: 1px solid var(--sep); margin: 18px 0; }
+        .info-text { font-size: 14px; color: var(--text-sub); line-height: 1.6; margin-bottom: 14px; }
+        .form-textarea {
+            width: 100%; padding: 12px 14px;
+            border: 1.5px solid var(--sep); border-radius: 12px;
+            font-size: 13px; font-family: monospace;
+            background: var(--bg); color: var(--text);
+            outline: none; resize: none; min-height: 100px;
+        }
+        .form-textarea:focus { border-color: var(--primary); background: #fff; }
+    </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+    <div class="header-top">
+        <div class="header-title">🛒 お買い物リスト</div>
+        <div class="header-actions">
+            <button class="btn-text" id="editModeBtn" onclick="toggleEditMode()">編集</button>
+            <button class="btn-text" onclick="showShareModal()">共有</button>
+        </div>
+    </div>
+    <div class="store-tabs">
+        <button class="store-tab active" data-store="全て"        onclick="setStore('全て')">全て</button>
+        <button class="store-tab"        data-store="スーパー"    onclick="setStore('スーパー')">スーパー</button>
+        <button class="store-tab"        data-store="ドラッグストア" onclick="setStore('ドラッグストア')">ドラッグストア</button>
+        <button class="store-tab"        data-store="アミカ"      onclick="setStore('アミカ')">アミカ</button>
+        <button class="store-tab"        data-store="その他"      onclick="setStore('その他')">その他</button>
+    </div>
+</div>
+
+<!-- Memo -->
+<div class="memo-wrap">
+    <textarea class="memo-textarea" id="memoText" placeholder="📝 メモ（特記事項・買い忘れなど）..."></textarea>
+</div>
+
+<!-- Main content -->
+<div class="content" id="content"></div>
+
+<!-- FAB -->
+<button class="fab" onclick="showAddModal()" title="アイテムを追加">+</button>
+
+<!-- ======= Add / Edit Item Modal ======= -->
+<div class="modal-overlay" id="itemModal" onclick="overlayClose(event,'itemModal')">
+    <div class="modal">
+        <div class="modal-handle"></div>
+        <div class="modal-header">
+            <div class="modal-title" id="modalTitle">アイテムを追加</div>
+            <button class="modal-close" onclick="hideModal('itemModal')">✕</button>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">名前 *</label>
+            <input type="text" class="form-input" id="itemName" placeholder="例：牛乳" autocomplete="off">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">カテゴリー</label>
+            <div class="select-wrap">
+                <select class="form-select" id="itemCategory">
+                    <option value="野菜・果物">🥦 野菜・果物</option>
+                    <option value="肉・魚">🥩 肉・魚</option>
+                    <option value="乳製品・卵">🥛 乳製品・卵</option>
+                    <option value="飲み物">🧃 飲み物</option>
+                    <option value="冷凍食品">🧊 冷凍食品</option>
+                    <option value="お菓子">🍫 お菓子</option>
+                    <option value="調味料・乾物">🧂 調味料・乾物</option>
+                    <option value="日用品">🧴 日用品</option>
+                    <option value="薬・健康">💊 薬・健康</option>
+                    <option value="その他">📦 その他</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">単位（例：個・本・袋）</label>
+            <input type="text" class="form-input" id="itemUnit" placeholder="個" autocomplete="off">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">買う場所 *</label>
+            <div class="store-chips">
+                <input type="checkbox" class="store-chip-input" id="chip-スーパー"    value="スーパー">
+                <label class="store-chip-label" for="chip-スーパー">スーパー</label>
+
+                <input type="checkbox" class="store-chip-input" id="chip-ドラッグストア" value="ドラッグストア">
+                <label class="store-chip-label" for="chip-ドラッグストア">ドラッグストア</label>
+
+                <input type="checkbox" class="store-chip-input" id="chip-アミカ" value="アミカ">
+                <label class="store-chip-label" for="chip-アミカ">アミカ</label>
+
+                <input type="checkbox" class="store-chip-input" id="chip-その他" value="その他">
+                <label class="store-chip-label" for="chip-その他">その他</label>
+            </div>
+        </div>
+
+        <!-- 毎回買う トグル -->
+        <div class="form-group">
+            <label class="toggle-row" for="itemAlwaysBuy">
+                <div class="toggle-row-left">
+                    <span class="toggle-row-icon">⭐</span>
+                    <div>
+                        <div class="toggle-row-text">毎回買う</div>
+                        <div class="toggle-row-sub">リセット時に自動でチェックが入ります</div>
+                    </div>
+                </div>
+                <input type="checkbox" class="toggle-input" id="itemAlwaysBuy">
+                <span class="toggle-switch"></span>
+            </label>
+        </div>
+
+        <button class="btn-primary" onclick="saveItem()">保存する</button>
+    </div>
+</div>
+
+<!-- ======= Share / Sync Modal ======= -->
+<div class="modal-overlay" id="shareModal" onclick="overlayClose(event,'shareModal')">
+    <div class="modal">
+        <div class="modal-handle"></div>
+        <div class="modal-header">
+            <div class="modal-title">共有・同期</div>
+            <button class="modal-close" onclick="hideModal('shareModal')">✕</button>
+        </div>
+
+        <p class="info-text">マスターリストをJSON形式でエクスポートし、他のデバイスでインポートすることで共有できます。</p>
+
+        <button class="btn-primary" onclick="exportData()" style="margin-bottom:10px;">
+            📤 マスターリストをコピー
+        </button>
+        <button class="btn-secondary" onclick="toggleImportArea()">
+            📥 データをインポート
+        </button>
+
+        <div id="importArea" style="display:none;margin-top:4px;">
+            <label class="form-label" style="margin-bottom:6px;">コピーしたデータを貼り付け</label>
+            <textarea class="form-textarea" id="importText" placeholder="ここに貼り付けてください..."></textarea>
+            <button class="btn-primary" onclick="importData()" style="margin-top:8px;">インポートする</button>
+        </div>
+
+        <hr class="modal-divider">
+
+        <button class="btn-danger-outline" onclick="confirmResetSession()">
+            🔄 今回の買い物をリセット
+        </button>
+        <p style="font-size:12px;color:var(--text-sub);margin-top:8px;text-align:center;">
+            ⭐ 毎回買う設定のアイテムは自動でチェックが入ります
+        </p>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// =============================================
+// CONSTANTS
+// =============================================
+const STORES = ['スーパー','ドラッグストア','アミカ','その他'];
+const CATEGORIES = ['野菜・果物','肉・魚','乳製品・卵','飲み物','冷凍食品','お菓子','調味料・乾物','日用品','薬・健康','その他'];
+const CAT_EMOJI = {'野菜・果物':'🥦','肉・魚':'🥩','乳製品・卵':'🥛','飲み物':'🧃','冷凍食品':'🧊','お菓子':'🍫','調味料・乾物':'🧂','日用品':'🧴','薬・健康':'💊','その他':'📦'};
+
+const DEFAULT_ITEMS = [
+    // 野菜・果物
+    {id:1, name:'キャベツ',      category:'野菜・果物', unit:'個',   stores:['スーパー','アミカ']},
+    {id:2, name:'にんじん',      category:'野菜・果物', unit:'本',   stores:['スーパー','アミカ']},
+    {id:3, name:'玉ねぎ',        category:'野菜・果物', unit:'個',   stores:['スーパー','アミカ']},
+    {id:4, name:'じゃがいも',    category:'野菜・果物', unit:'個',   stores:['スーパー','アミカ']},
+    {id:5, name:'トマト',        category:'野菜・果物', unit:'個',   stores:['スーパー']},
+    {id:6, name:'レタス',        category:'野菜・果物', unit:'個',   stores:['スーパー']},
+    {id:7, name:'ほうれん草',    category:'野菜・果物', unit:'袋',   stores:['スーパー']},
+    {id:8, name:'バナナ',        category:'野菜・果物', unit:'房',   stores:['スーパー']},
+    {id:9, name:'りんご',        category:'野菜・果物', unit:'個',   stores:['スーパー']},
+    // 肉・魚
+    {id:10,name:'鶏もも肉',      category:'肉・魚',    unit:'パック',stores:['スーパー']},
+    {id:11,name:'豚ひき肉',      category:'肉・魚',    unit:'パック',stores:['スーパー']},
+    {id:12,name:'牛こま切れ',    category:'肉・魚',    unit:'パック',stores:['スーパー']},
+    {id:13,name:'鮭',            category:'肉・魚',    unit:'切れ',  stores:['スーパー']},
+    {id:14,name:'ツナ缶',        category:'肉・魚',    unit:'缶',    stores:['スーパー','アミカ']},
+    // 乳製品・卵
+    {id:15,name:'卵',            category:'乳製品・卵',unit:'パック',stores:['スーパー','アミカ']},
+    {id:16,name:'牛乳',          category:'乳製品・卵',unit:'本',    stores:['スーパー','ドラッグストア']},
+    {id:17,name:'ヨーグルト',    category:'乳製品・卵',unit:'個',    stores:['スーパー','ドラッグストア']},
+    {id:18,name:'チーズ',        category:'乳製品・卵',unit:'個',    stores:['スーパー']},
+    {id:19,name:'バター',        category:'乳製品・卵',unit:'個',    stores:['スーパー']},
+    // 飲み物
+    {id:20,name:'お茶（2L）',    category:'飲み物',    unit:'本',    stores:['スーパー','ドラッグストア','アミカ']},
+    {id:21,name:'水（2L）',      category:'飲み物',    unit:'本',    stores:['スーパー','ドラッグストア','アミカ']},
+    {id:22,name:'オレンジジュース',category:'飲み物',  unit:'本',    stores:['スーパー','アミカ']},
+    {id:23,name:'コーヒー（缶）',category:'飲み物',    unit:'本',    stores:['スーパー','ドラッグストア','その他']},
+    // 冷凍食品
+    {id:24,name:'冷凍餃子',      category:'冷凍食品',  unit:'袋',    stores:['スーパー','アミカ']},
+    {id:25,name:'冷凍野菜ミックス',category:'冷凍食品',unit:'袋',    stores:['スーパー','アミカ']},
+    {id:26,name:'冷凍うどん',    category:'冷凍食品',  unit:'袋',    stores:['スーパー','アミカ']},
+    {id:27,name:'アイスクリーム',category:'冷凍食品',  unit:'個',    stores:['スーパー','アミカ']},
+    // お菓子
+    {id:28,name:'ポテトチップス',category:'お菓子',    unit:'袋',    stores:['スーパー','ドラッグストア','アミカ']},
+    {id:29,name:'チョコレート',  category:'お菓子',    unit:'個',    stores:['スーパー','ドラッグストア','アミカ']},
+    {id:30,name:'クッキー',      category:'お菓子',    unit:'袋',    stores:['スーパー','アミカ']},
+    // 調味料・乾物
+    {id:31,name:'醤油',          category:'調味料・乾物',unit:'本',  stores:['スーパー','アミカ']},
+    {id:32,name:'みりん',        category:'調味料・乾物',unit:'本',  stores:['スーパー']},
+    {id:33,name:'砂糖',          category:'調味料・乾物',unit:'袋',  stores:['スーパー','アミカ']},
+    {id:34,name:'塩',            category:'調味料・乾物',unit:'袋',  stores:['スーパー']},
+    {id:35,name:'サラダ油',      category:'調味料・乾物',unit:'本',  stores:['スーパー','アミカ']},
+    {id:36,name:'お米（5kg）',   category:'調味料・乾物',unit:'袋',  stores:['スーパー','アミカ']},
+    {id:37,name:'パスタ',        category:'調味料・乾物',unit:'袋',  stores:['スーパー','アミカ']},
+    {id:38,name:'うどん（乾）',  category:'調味料・乾物',unit:'袋',  stores:['スーパー','アミカ']},
+    {id:39,name:'カレールー',    category:'調味料・乾物',unit:'箱',  stores:['スーパー','アミカ']},
+    {id:40,name:'味噌',          category:'調味料・乾物',unit:'個',  stores:['スーパー']},
+    {id:41,name:'マヨネーズ',    category:'調味料・乾物',unit:'本',  stores:['スーパー','アミカ']},
+    {id:42,name:'ケチャップ',    category:'調味料・乾物',unit:'本',  stores:['スーパー','アミカ']},
+    // 日用品
+    {id:43,name:'トイレットペーパー',category:'日用品', unit:'パック',stores:['ドラッグストア','アミカ']},
+    {id:44,name:'ティッシュ',    category:'日用品',    unit:'箱',    stores:['ドラッグストア','アミカ']},
+    {id:45,name:'シャンプー',    category:'日用品',    unit:'本',    stores:['ドラッグストア']},
+    {id:46,name:'ボディソープ',  category:'日用品',    unit:'本',    stores:['ドラッグストア']},
+    {id:47,name:'歯磨き粉',      category:'日用品',    unit:'本',    stores:['ドラッグストア']},
+    {id:48,name:'洗濯洗剤',      category:'日用品',    unit:'個',    stores:['ドラッグストア','アミカ']},
+    {id:49,name:'食器用洗剤',    category:'日用品',    unit:'本',    stores:['スーパー','ドラッグストア']},
+    {id:50,name:'キッチンペーパー',category:'日用品',  unit:'個',    stores:['スーパー','ドラッグストア','アミカ']},
+    {id:51,name:'ラップ',        category:'日用品',    unit:'個',    stores:['スーパー','ドラッグストア','アミカ']},
+    {id:52,name:'ポリ袋',        category:'日用品',    unit:'袋',    stores:['スーパー','ドラッグストア','アミカ']},
+    // 薬・健康
+    {id:53,name:'風邪薬',        category:'薬・健康',  unit:'箱',    stores:['ドラッグストア']},
+    {id:54,name:'解熱剤',        category:'薬・健康',  unit:'箱',    stores:['ドラッグストア']},
+    {id:55,name:'絆創膏',        category:'薬・健康',  unit:'箱',    stores:['ドラッグストア']},
+    {id:56,name:'マスク',        category:'薬・健康',  unit:'箱',    stores:['ドラッグストア']},
+    {id:57,name:'ハンドソープ',  category:'薬・健康',  unit:'本',    stores:['ドラッグストア','スーパー']},
+    // アミカ専用
+    {id:58,name:'業務用唐揚げ粉',         category:'調味料・乾物',unit:'袋',stores:['アミカ']},
+    {id:59,name:'業務用冷凍フライドポテト',category:'冷凍食品',  unit:'袋',stores:['アミカ']},
+    {id:60,name:'業務用パスタ（5kg）',     category:'調味料・乾物',unit:'袋',stores:['アミカ']},
+];
+
+// =============================================
+// STATE
+// =============================================
+let items = [];
+// session[id] = { checked: bool, quantity: number, inventory: number }
+let session = {};
+let memo = '';
+let currentStore = '全て';
+let editMode = false;
+let editingId = null;
+let nextId = 200;
+
+// =============================================
+// STORAGE
+// =============================================
+function load() {
+    try {
+        const si = localStorage.getItem('sq_items');
+        const ss = localStorage.getItem('sq_session');
+        const sn = localStorage.getItem('sq_nextId');
+        const sm = localStorage.getItem('sq_memo');
+        items   = si ? JSON.parse(si) : DEFAULT_ITEMS.map(i => ({...i}));
+        session = ss ? JSON.parse(ss) : {};
+        nextId  = sn ? parseInt(sn) : (Math.max(0, ...items.map(i => i.id)) + 1);
+        memo    = sm || '';
+    } catch(e) {
+        items = DEFAULT_ITEMS.map(i => ({...i}));
+        session = {}; nextId = 200; memo = '';
+    }
+}
+
+function save() {
+    localStorage.setItem('sq_items',   JSON.stringify(items));
+    localStorage.setItem('sq_session', JSON.stringify(session));
+    localStorage.setItem('sq_nextId',  String(nextId));
+    localStorage.setItem('sq_memo',    memo);
+}
+
+// =============================================
+// MEMO
+// =============================================
+function initMemo() {
+    const el = document.getElementById('memoText');
+    el.value = memo;
+    el.addEventListener('input', () => {
+        memo = el.value;
+        // auto-resize
+        el.style.height = 'auto';
+        el.style.height = Math.min(el.scrollHeight, 140) + 'px';
+        save();
+    });
+    // init height
+    if (memo) {
+        el.style.height = 'auto';
+        el.style.height = Math.min(el.scrollHeight, 140) + 'px';
+    }
+}
+
+// =============================================
+// RENDER
+// =============================================
+function render() {
+    const el = document.getElementById('content');
+
+    let filtered = currentStore === '全て'
+        ? items
+        : items.filter(i => i.stores.includes(currentStore));
+
+    if (filtered.length === 0) {
+        el.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">🛒</div>
+                <div class="empty-title">アイテムがありません</div>
+                <div class="empty-sub">「+」ボタンでアイテムを追加できます</div>
+            </div>`;
+        return;
+    }
+
+    const checked   = filtered.filter(i =>  session[i.id]?.checked);
+    const unchecked = filtered.filter(i => !session[i.id]?.checked);
+
+    let html = '';
+
+    // ✅ 買い物かご（チェック済み）
+    if (checked.length > 0) {
+        html += `<div class="section">
+            <div class="section-header">
+                ✅ 買い物かご
+                <span class="checked-badge">${checked.length}</span>
+            </div>
+            ${checked.map(renderRow).join('')}
+        </div>`;
+    }
+
+    // カテゴリ別（未チェック）
+    const usedCats = CATEGORIES.filter(c => unchecked.some(i => i.category === c));
+    usedCats.forEach(cat => {
+        const catItems = unchecked.filter(i => i.category === cat);
+        if (!catItems.length) return;
+        html += `<div class="section">
+            <div class="section-header">${CAT_EMOJI[cat] || '📦'} ${cat}</div>
+            ${catItems.map(renderRow).join('')}
+        </div>`;
+    });
+
+    el.innerHTML = html;
+}
+
+function renderRow(item) {
+    const s         = session[item.id] || {};
+    const checked   = !!s.checked;
+    const qty       = s.quantity  ?? 1;
+    const inv       = s.inventory ?? 0;
+    const storeLbl  = item.stores.join('・');
+    const alwaysMark = item.alwaysBuy
+        ? `<span class="always-star" title="毎回買う">⭐</span>`
+        : '';
+
+    const editBtns = editMode ? `
+        <div class="item-edit-btns">
+            <button class="btn-edit-sm" onclick="showEditModal(${item.id})" title="編集">✏️</button>
+            <button class="btn-del-sm"  onclick="deleteItem(${item.id})"    title="削除">🗑️</button>
+        </div>` : '';
+
+    return `
+        <div class="item-row${checked ? ' checked' : ''}" id="row-${item.id}">
+            <div class="item-check${checked ? ' checked' : ''}" onclick="toggleCheck(${item.id})" role="checkbox" aria-checked="${checked}">
+                ${checked ? '✓' : ''}
+            </div>
+            <div class="item-info">
+                <div class="item-name${checked ? ' checked' : ''}">
+                    ${esc(item.name)}${alwaysMark}
+                </div>
+                ${currentStore === '全て' ? `<div class="item-meta">${esc(storeLbl)}</div>` : ''}
+            </div>
+
+            <div class="qty-wrap">
+                <!-- 買う数量 -->
+                <div class="qty-controls">
+                    <button class="qty-btn minus" onclick="changeQty(${item.id},-1)" aria-label="減らす">−</button>
+                    <span class="qty-display" id="qty-${item.id}">${qty}${esc(item.unit)}</span>
+                    <button class="qty-btn plus"  onclick="changeQty(${item.id},1)"  aria-label="増やす">+</button>
+                </div>
+                <!-- 在庫（内側） -->
+                <div class="inv-row">
+                    <span class="inv-label">在庫</span>
+                    <button class="inv-btn" onclick="changeInv(${item.id},-1)" aria-label="在庫を減らす">−</button>
+                    <span class="inv-display" id="inv-${item.id}">${inv}${esc(item.unit)}</span>
+                    <button class="inv-btn" onclick="changeInv(${item.id},1)"  aria-label="在庫を増やす">+</button>
+                </div>
+            </div>
+
+            ${editBtns}
+        </div>`;
+}
+
+function esc(s) {
+    return String(s)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// =============================================
+// ACTIONS
+// =============================================
+function setStore(store) {
+    currentStore = store;
+    document.querySelectorAll('.store-tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.store === store);
+    });
+    render();
+}
+
+function toggleCheck(id) {
+    if (!session[id]) session[id] = { checked: false, quantity: 1, inventory: 0 };
+    session[id].checked = !session[id].checked;
+    save(); render();
+}
+
+function changeQty(id, delta) {
+    if (!session[id]) session[id] = { checked: false, quantity: 1, inventory: 0 };
+    const next = Math.max(1, (session[id].quantity ?? 1) + delta);
+    session[id].quantity = next;
+    save();
+    const item = items.find(i => i.id === id);
+    const el   = document.getElementById(`qty-${id}`);
+    if (el && item) el.textContent = `${next}${item.unit}`;
+}
+
+function changeInv(id, delta) {
+    if (!session[id]) session[id] = { checked: false, quantity: 1, inventory: 0 };
+    const next = Math.max(0, (session[id].inventory ?? 0) + delta);
+    session[id].inventory = next;
+    save();
+    const item = items.find(i => i.id === id);
+    const el   = document.getElementById(`inv-${id}`);
+    if (el && item) el.textContent = `${next}${item.unit}`;
+}
+
+function toggleEditMode() {
+    editMode = !editMode;
+    const btn = document.getElementById('editModeBtn');
+    btn.textContent = editMode ? '完了' : '編集';
+    btn.className   = editMode ? 'btn-text danger' : 'btn-text';
+    render();
+}
+
+// =============================================
+// ADD / EDIT MODAL
+// =============================================
+function showAddModal() {
+    editingId = null;
+    document.getElementById('modalTitle').textContent = 'アイテムを追加';
+    document.getElementById('itemName').value      = '';
+    document.getElementById('itemCategory').value  = 'その他';
+    document.getElementById('itemUnit').value      = '個';
+    document.getElementById('itemAlwaysBuy').checked = false;
+    STORES.forEach(s => { document.getElementById(`chip-${s}`).checked = false; });
+    document.getElementById('chip-スーパー').checked = true;
+    showModal('itemModal');
+    setTimeout(() => document.getElementById('itemName').focus(), 300);
+}
+
+function showEditModal(id) {
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+    editingId = id;
+    document.getElementById('modalTitle').textContent = 'アイテムを編集';
+    document.getElementById('itemName').value       = item.name;
+    document.getElementById('itemCategory').value   = item.category;
+    document.getElementById('itemUnit').value       = item.unit;
+    document.getElementById('itemAlwaysBuy').checked = !!item.alwaysBuy;
+    STORES.forEach(s => { document.getElementById(`chip-${s}`).checked = item.stores.includes(s); });
+    showModal('itemModal');
+}
+
+function saveItem() {
+    const name = document.getElementById('itemName').value.trim();
+    if (!name) { toast('名前を入力してください'); return; }
+    const category  = document.getElementById('itemCategory').value;
+    const unit      = document.getElementById('itemUnit').value.trim() || '個';
+    const stores    = STORES.filter(s => document.getElementById(`chip-${s}`).checked);
+    const alwaysBuy = document.getElementById('itemAlwaysBuy').checked;
+    if (!stores.length) { toast('買う場所を選んでください'); return; }
+
+    if (editingId != null) {
+        const idx = items.findIndex(i => i.id === editingId);
+        if (idx >= 0) items[idx] = { ...items[idx], name, category, unit, stores, alwaysBuy };
+        toast('更新しました');
+    } else {
+        items.push({ id: nextId++, name, category, unit, stores, alwaysBuy });
+        toast('追加しました');
+    }
+    save(); hideModal('itemModal'); render();
+}
+
+function deleteItem(id) {
+    if (!confirm('このアイテムを削除しますか？')) return;
+    items = items.filter(i => i.id !== id);
+    delete session[id];
+    save(); render();
+    toast('削除しました');
+}
+
+// =============================================
+// SHARE
+// =============================================
+function showShareModal() {
+    document.getElementById('importArea').style.display = 'none';
+    document.getElementById('importText').value = '';
+    showModal('shareModal');
+}
+
+function exportData() {
+    const data = JSON.stringify({ items, nextId });
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(data)
+            .then(() => toast('コピーしました！他のデバイスに貼り付けてください'))
+            .catch(() => fallbackCopy(data));
+    } else { fallbackCopy(data); }
+}
+
+function fallbackCopy(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    toast('コピーしました！');
+}
+
+function toggleImportArea() {
+    const a = document.getElementById('importArea');
+    a.style.display = a.style.display === 'none' ? 'block' : 'none';
+}
+
+function importData() {
+    const text = document.getElementById('importText').value.trim();
+    try {
+        const data = JSON.parse(text);
+        if (!data.items || !Array.isArray(data.items)) throw new Error();
+        if (!confirm(`${data.items.length}件のアイテムをインポートします。現在のマスターリストは上書きされます。よろしいですか？`)) return;
+        items = data.items;
+        if (data.nextId) nextId = data.nextId;
+        save(); render(); hideModal('shareModal');
+        toast('インポートしました！');
+    } catch(e) { toast('データの形式が正しくありません'); }
+}
+
+// =============================================
+// RESET（毎回買う → 自動チェック）
+// =============================================
+function confirmResetSession() {
+    const alwaysCount = items.filter(i => i.alwaysBuy).length;
+    const msg = alwaysCount > 0
+        ? `チェック・数量をリセットし、⭐毎回買う設定の${alwaysCount}件を自動チェックします。よろしいですか？`
+        : 'チェック・数量をすべてリセットしますか？\n（マスターリストは変わりません）';
+    if (!confirm(msg)) return;
+
+    // 在庫は引き継ぐ
+    const prevInv = {};
+    Object.keys(session).forEach(id => {
+        if (session[id].inventory) prevInv[id] = session[id].inventory;
+    });
+
+    session = {};
+
+    // 在庫を復元
+    Object.keys(prevInv).forEach(id => {
+        if (!session[id]) session[id] = { checked: false, quantity: 1, inventory: 0 };
+        session[id].inventory = prevInv[id];
+    });
+
+    // 毎回買うアイテムを自動チェック
+    items.forEach(item => {
+        if (item.alwaysBuy) {
+            if (!session[item.id]) session[item.id] = { checked: false, quantity: 1, inventory: 0 };
+            session[item.id].checked  = true;
+            session[item.id].quantity = session[item.id].quantity || 1;
+        }
+    });
+
+    save(); render(); hideModal('shareModal');
+    toast(`リセット完了${alwaysCount > 0 ? `・${alwaysCount}件を自動チェック✅` : ''}`);
+}
+
+// =============================================
+// MODAL HELPERS
+// =============================================
+function showModal(id)  { document.getElementById(id).classList.add('show'); }
+function hideModal(id)  { document.getElementById(id).classList.remove('show'); }
+function overlayClose(e, id) { if (e.target === e.currentTarget) hideModal(id); }
+
+// =============================================
+// TOAST
+// =============================================
+let _toastTimer;
+function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg; el.classList.add('show');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// =============================================
+// KEYBOARD
+// =============================================
+document.getElementById('itemName').addEventListener('keydown', e => {
+    if (e.key === 'Enter') saveItem();
+});
+
+// =============================================
+// INIT
+// =============================================
+load();
+initMemo();
+render();
+</script>
+</body>
+</html>
