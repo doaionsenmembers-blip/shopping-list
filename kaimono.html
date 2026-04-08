@@ -147,6 +147,20 @@
         .item-name.checked { color: var(--text-sub); }
         .item-meta { font-size: 12px; color: var(--text-sub); margin-top: 1px; }
         .always-star { font-size: 11px; color: var(--orange); flex-shrink: 0; }
+        .unit-badge { font-size: 11px; color: var(--text-sub); background: var(--bg); border-radius: 4px; padding: 1px 4px; margin-left: 4px; font-weight: 500; }
+
+        /* ---- DRAG & DROP ---- */
+        .item-row.drag-src { opacity: 0.3; }
+        .drag-ghost {
+            position: fixed; pointer-events: none; z-index: 9999;
+            box-shadow: 0 8px 28px rgba(0,0,0,0.22); border-radius: 14px;
+            opacity: 0.92; background: var(--card);
+        }
+        .drag-placeholder {
+            border: 2px dashed var(--primary); border-radius: 14px;
+            background: rgba(0,122,255,0.07); margin: 3px 0;
+            transition: none;
+        }
 
         /* ---- QTY WRAP ---- */
         .qty-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; flex-shrink: 0; }
@@ -561,27 +575,27 @@ const DEFAULT_ITEMS = [
     // ---- スーパー 野菜・果物 ----
     {id:122, name:'大根',       category:'野菜・果物', unit:'本',    stores:['スーパー']},
     {id:123, name:'ふき',       category:'野菜・果物', unit:'本',    stores:['スーパー']},
-    {id:124, name:'人参',       category:'野菜・果物', unit:'3本入', stores:['スーパー']},
-    {id:125, name:'大葉',       category:'野菜・果物', unit:'20枚入',stores:['スーパー']},
-    {id:126, name:'ごぼう',     category:'野菜・果物', unit:'2本入', stores:['スーパー']},
+    {id:124, name:'人参',       category:'野菜・果物', unit:'(3本入)', stores:['スーパー']},
+    {id:125, name:'大葉',       category:'野菜・果物', unit:'(20枚入)',stores:['スーパー']},
+    {id:126, name:'ごぼう',     category:'野菜・果物', unit:'(2本入)', stores:['スーパー']},
     {id:127, name:'レモン',     category:'野菜・果物', unit:'個',    stores:['スーパー']},
     {id:128, name:'ささぎ',     category:'野菜・果物', unit:'袋',    stores:['スーパー']},
-    {id:129, name:'白ねぎ',     category:'野菜・果物', unit:'3本入', stores:['スーパー']},
-    {id:130, name:'細ねぎ',     category:'野菜・果物', unit:'3本入', stores:['スーパー']},
-    {id:131, name:'かぼちゃ',   category:'野菜・果物', unit:'1/2個', stores:['スーパー']},
-    {id:132, name:'シイタケ',   category:'野菜・果物', unit:'6個入', stores:['スーパー']},
-    {id:133, name:'マイタケ',   category:'野菜・果物', unit:'2房入', stores:['スーパー']},
+    {id:129, name:'白ねぎ',     category:'野菜・果物', unit:'(3本入)', stores:['スーパー']},
+    {id:130, name:'細ねぎ',     category:'野菜・果物', unit:'(3本入)', stores:['スーパー']},
+    {id:131, name:'かぼちゃ',   category:'野菜・果物', unit:'(1/2個)', stores:['スーパー']},
+    {id:132, name:'シイタケ',   category:'野菜・果物', unit:'(6個入)', stores:['スーパー']},
+    {id:133, name:'マイタケ',   category:'野菜・果物', unit:'(2房入)', stores:['スーパー']},
     {id:134, name:'キクラゲ',   category:'野菜・果物', unit:'袋',    stores:['スーパー']},
-    {id:135, name:'きゅうり',   category:'野菜・果物', unit:'5本入', stores:['スーパー']},
+    {id:135, name:'きゅうり',   category:'野菜・果物', unit:'(5本入)', stores:['スーパー']},
     {id:136, name:'ナメコ',     category:'野菜・果物', unit:'袋',    stores:['スーパー']},
     {id:137, name:'シメジ',     category:'野菜・果物', unit:'袋',    stores:['スーパー']},
     {id:138, name:'エリンギ',   category:'野菜・果物', unit:'袋',    stores:['スーパー']},
     {id:139, name:'エノキ',     category:'野菜・果物', unit:'袋',    stores:['スーパー']},
     {id:140, name:'ショウガ',   category:'野菜・果物', unit:'袋',    stores:['スーパー']},
-    {id:141, name:'トマト（2個入）', category:'野菜・果物', unit:'2個入', stores:['スーパー']},
+    {id:141, name:'トマト（2個入）', category:'野菜・果物', unit:'(2個入)', stores:['スーパー']},
     {id:142, name:'プチトマト', category:'野菜・果物', unit:'袋',    stores:['スーパー']},
     {id:143, name:'さつま芋',   category:'野菜・果物', unit:'袋',    stores:['スーパー']},
-    {id:144, name:'みょうが',   category:'野菜・果物', unit:'3本入', stores:['スーパー']},
+    {id:144, name:'みょうが',   category:'野菜・果物', unit:'(3本入)', stores:['スーパー']},
     {id:145, name:'みつば',     category:'野菜・果物', unit:'本',    stores:['スーパー']},
     {id:146, name:'ほうれん草（袋）', category:'野菜・果物', unit:'袋', stores:['スーパー']},
     {id:147, name:'小松菜',     category:'野菜・果物', unit:'袋',    stores:['スーパー']},
@@ -687,7 +701,7 @@ function saveLocal() {
 }
 
 async function saveSessionToFirebase() {
-    const data = { session, memo };
+    const data = { session, memo, items, nextId };
     const json = JSON.stringify(data);
     if (json === _lastSyncedSession) return;
     setSyncStatus('syncing');
@@ -710,6 +724,8 @@ async function loadFromFirebase() {
         // 更新があれば反映
         if (data.session) session = data.session;
         if (typeof data.memo === 'string') memo = data.memo;
+        if (Array.isArray(data.items) && data.items.length > 0) items = data.items;
+        if (data.nextId) nextId = data.nextId;
         saveLocal();
         return true;
     } catch(e) {
@@ -807,25 +823,26 @@ function renderRow(item) {
     const inv      = s.inventory ?? 0;
     const storeLbl = item.stores.join('・');
     const alwaysMark = item.alwaysBuy ? `<span class="always-star" title="毎回買う">⭐</span>` : '';
+    const unitMark = /\d/.test(item.unit) ? `<span class="unit-badge">${esc(item.unit)}</span>` : '';
     const editBtns = editMode ? `<div class="item-edit-btns"><button class="btn-edit-sm" onclick="showEditModal(${item.id})">✏️</button><button class="btn-del-sm" onclick="deleteItem(${item.id})">🗑️</button></div>` : '';
 
     return `
-        <div class="item-row${checked?' checked':''}" id="row-${item.id}">
+        <div class="item-row${checked?' checked':''}" id="row-${item.id}" ontouchstart="dragTouchStart(event,${item.id})">
             <div class="item-check${checked?' checked':''}" onclick="toggleCheck(${item.id})">${checked?'✓':''}</div>
             <div class="item-info">
-                <div class="item-name${checked?' checked':''}">${esc(item.name)}${alwaysMark}</div>
+                <div class="item-name${checked?' checked':''}">${esc(item.name)}${unitMark}${alwaysMark}</div>
                 ${currentStore==='全て'?`<div class="item-meta">${esc(storeLbl)}</div>`:''}
             </div>
             <div class="qty-wrap">
                 <div class="qty-controls">
                     <button class="qty-btn minus" onclick="changeQty(${item.id},-1)">−</button>
-                    <span class="qty-display" id="qty-${item.id}">${qty}${esc(item.unit)}</span>
+                    <span class="qty-display" id="qty-${item.id}">${qty}</span>
                     <button class="qty-btn plus"  onclick="changeQty(${item.id},1)">+</button>
                 </div>
                 <div class="inv-row">
                     <span class="inv-label">在庫</span>
                     <button class="inv-btn" onclick="changeInv(${item.id},-1)">−</button>
-                    <span class="inv-display" id="inv-${item.id}">${inv}${esc(item.unit)}</span>
+                    <span class="inv-display" id="inv-${item.id}">${inv}</span>
                     <button class="inv-btn" onclick="changeInv(${item.id},1)">+</button>
                 </div>
             </div>
@@ -860,7 +877,7 @@ function changeQty(id, delta) {
     saveLocal();
     const item = items.find(i => i.id === id);
     const el = document.getElementById(`qty-${id}`);
-    if (el && item) el.textContent = `${next}${item.unit}`;
+    if (el) el.textContent = `${next}`;
     saveSessionToFirebase();
 }
 
@@ -869,9 +886,8 @@ function changeInv(id, delta) {
     const next = Math.max(0, (session[id].inventory ?? 0) + delta);
     session[id].inventory = next;
     saveLocal();
-    const item = items.find(i => i.id === id);
     const el = document.getElementById(`inv-${id}`);
-    if (el && item) el.textContent = `${next}${item.unit}`;
+    if (el) el.textContent = `${next}`;
     saveSessionToFirebase();
 }
 
@@ -1044,6 +1060,106 @@ document.getElementById('itemName').addEventListener('keydown', e => {
 // =============================================
 // INIT
 // =============================================
+// =============================================
+// DRAG & DROP (長押しで並び替え)
+// =============================================
+let _drag = null;
+let _lpTimer = null;
+let _lpStart = null;
+
+function dragTouchStart(e, id) {
+    const touch = e.touches[0];
+    _lpStart = { x: touch.clientX, y: touch.clientY };
+    _lpTimer = setTimeout(() => {
+        _lpTimer = null;
+        const row = document.getElementById(`row-${id}`);
+        if (!row) return;
+        if (navigator.vibrate) navigator.vibrate(40);
+
+        const rect = row.getBoundingClientRect();
+        const ghost = row.cloneNode(true);
+        ghost.removeAttribute('id');
+        ghost.className = 'item-row drag-ghost';
+        ghost.style.cssText += `left:${rect.left}px;top:${rect.top}px;width:${rect.width}px;`;
+        document.body.appendChild(ghost);
+
+        const ph = document.createElement('div');
+        ph.className = 'drag-placeholder';
+        ph.style.height = rect.height + 'px';
+        row.parentNode.insertBefore(ph, row);
+        row.classList.add('drag-src');
+
+        _drag = { id, ghost, ph, row, offY: touch.clientY - rect.top };
+    }, 500);
+}
+
+function dragTouchMove(e) {
+    if (_lpTimer && _lpStart) {
+        const t = e.touches[0];
+        if (Math.abs(t.clientX - _lpStart.x) > 8 || Math.abs(t.clientY - _lpStart.y) > 8) {
+            clearTimeout(_lpTimer); _lpTimer = null;
+        }
+    }
+    if (!_drag) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    _drag.ghost.style.top = (touch.clientY - _drag.offY) + 'px';
+
+    _drag.ghost.style.visibility = 'hidden';
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    _drag.ghost.style.visibility = '';
+
+    const target = el?.closest('.item-row');
+    if (target && target !== _drag.row && !target.classList.contains('drag-ghost')) {
+        const rect = target.getBoundingClientRect();
+        if (touch.clientY < rect.top + rect.height / 2) {
+            target.parentNode.insertBefore(_drag.ph, target);
+        } else {
+            target.parentNode.insertBefore(_drag.ph, target.nextSibling);
+        }
+    }
+}
+
+function dragEnd() {
+    clearTimeout(_lpTimer); _lpTimer = null;
+    if (!_drag) return;
+
+    // プレースホルダーの位置から新しい順序を確定
+    const ph = _drag.ph;
+    const section = ph.closest('.section');
+    if (section) {
+        const draggedId = _drag.id;
+        const draggedItem = items.find(i => i.id === draggedId);
+        const cat = draggedItem?.category;
+
+        // セクション内の全要素（行＋プレースホルダー）を順番に取得
+        const children = [...ph.parentNode.children];
+        const newIds = [];
+        for (const el of children) {
+            if (el === ph) {
+                newIds.push(draggedId);
+            } else if (el.classList.contains('item-row')) {
+                const rid = parseInt(el.id.replace('row-',''));
+                if (rid !== draggedId) newIds.push(rid);
+            }
+        }
+
+        // items配列内の該当カテゴリだけ順序入れ替え
+        let ci = 0;
+        const newCatOrder = newIds.map(id => items.find(i => i.id === id)).filter(Boolean);
+        items = items.map(item => item.category === cat ? newCatOrder[ci++] : item);
+    }
+
+    _drag.ghost.remove();
+    _drag.ph.remove();
+    _drag.row.classList.remove('drag-src');
+    _drag = null;
+
+    saveLocal();
+    render();
+    saveSessionToFirebase();
+}
+
 async function init() {
     loadLocal();
     setSyncStatus('syncing');
@@ -1060,6 +1176,10 @@ async function init() {
     initMemo();
     render();
     startPolling();
+
+    document.addEventListener('touchmove', dragTouchMove, { passive: false });
+    document.addEventListener('touchend', dragEnd);
+    document.addEventListener('touchcancel', dragEnd);
 }
 
 init();
