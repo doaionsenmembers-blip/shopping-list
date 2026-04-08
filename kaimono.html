@@ -144,7 +144,7 @@
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
             display: flex; align-items: center; gap: 5px;
         }
-        .item-name.checked { text-decoration: line-through; color: var(--text-sub); }
+        .item-name.checked { color: var(--text-sub); }
         .item-meta { font-size: 12px; color: var(--text-sub); margin-top: 1px; }
         .always-star { font-size: 11px; color: var(--orange); flex-shrink: 0; }
 
@@ -342,6 +342,7 @@
                     <option value="肉・魚">🥩 肉・魚</option>
                     <option value="乳製品・卵">🥛 乳製品・卵</option>
                     <option value="飲み物">🧃 飲み物</option>
+                    <option value="お酒">🍶 お酒</option>
                     <option value="冷凍食品">🧊 冷凍食品</option>
                     <option value="お菓子">🍫 お菓子</option>
                     <option value="調味料・乾物">🧂 調味料・乾物</option>
@@ -428,8 +429,8 @@ const DB_URL = 'https://kaimono-list-e6dc2-default-rtdb.asia-southeast1.firebase
 // CONSTANTS
 // =============================================
 const STORES = ['スーパー','ドラッグストア','アミカ','その他'];
-const CATEGORIES = ['野菜・果物','肉・魚','乳製品・卵','飲み物','冷凍食品','お菓子','調味料・乾物','日用品','薬・健康','その他'];
-const CAT_EMOJI = {'野菜・果物':'🥦','肉・魚':'🥩','乳製品・卵':'🥛','飲み物':'🧃','冷凍食品':'🧊','お菓子':'🍫','調味料・乾物':'🧂','日用品':'🧴','薬・健康':'💊','その他':'📦'};
+const CATEGORIES = ['野菜・果物','肉・魚','乳製品・卵','飲み物','お酒','冷凍食品','お菓子','調味料・乾物','日用品','薬・健康','その他'];
+const CAT_EMOJI = {'野菜・果物':'🥦','肉・魚':'🥩','乳製品・卵':'🥛','飲み物':'🧃','お酒':'🍶','冷凍食品':'🧊','お菓子':'🍫','調味料・乾物':'🧂','日用品':'🧴','薬・健康':'💊','その他':'📦'};
 
 const DEFAULT_ITEMS = [
     {id:1, name:'キャベツ',      category:'野菜・果物',  unit:'個',    stores:['スーパー','アミカ']},
@@ -492,6 +493,131 @@ const DEFAULT_ITEMS = [
     {id:58,name:'業務用唐揚げ粉',         category:'調味料・乾物',unit:'袋',stores:['アミカ']},
     {id:59,name:'業務用冷凍フライドポテト',category:'冷凍食品',  unit:'袋',stores:['アミカ']},
     {id:60,name:'業務用パスタ（5kg）',     category:'調味料・乾物',unit:'袋',stores:['アミカ']},
+    // ---- アミカ ----
+    {id:61, name:'白絞油',          category:'調味料・乾物', unit:'本',     stores:['アミカ']},
+    {id:62, name:'ねりごま',        category:'調味料・乾物', unit:'本',     stores:['アミカ']},
+    {id:63, name:'はじかみ',        category:'調味料・乾物', unit:'袋',     stores:['アミカ']},
+    {id:64, name:'いりごま',        category:'調味料・乾物', unit:'袋',     stores:['アミカ']},
+    {id:65, name:'糸とうからし',    category:'調味料・乾物', unit:'袋',     stores:['アミカ']},
+    {id:66, name:'香味そばつゆ',    category:'調味料・乾物', unit:'本',     stores:['アミカ']},
+    {id:67, name:'わさびのり',      category:'お菓子',       unit:'袋',     stores:['アミカ']},
+    {id:68, name:'ほんだし',        category:'調味料・乾物', unit:'箱',     stores:['アミカ']},
+    {id:69, name:'本懐石しょうゆ',  category:'調味料・乾物', unit:'本',     stores:['アミカ']},
+    {id:70, name:'あずき缶',        category:'調味料・乾物', unit:'缶',     stores:['アミカ']},
+    {id:71, name:'串',              category:'日用品',       unit:'本',     stores:['アミカ']},
+    {id:72, name:'ポリ手袋',        category:'日用品',       unit:'袋',     stores:['アミカ']},
+    {id:73, name:'70L袋',           category:'日用品',       unit:'袋',     stores:['アミカ']},
+    {id:74, name:'台所用洗剤',      category:'日用品',       unit:'本',     stores:['アミカ']},
+    {id:75, name:'台所用ハイター',  category:'日用品',       unit:'本',     stores:['アミカ']},
+    {id:76, name:'ウインナー',      category:'肉・魚',       unit:'袋',     stores:['アミカ']},
+    // ---- スーパー お酒 ----
+    {id:77, name:'ビンビール（アサヒ）', category:'お酒', unit:'本', stores:['スーパー']},
+    {id:78, name:'ビンビール（キリン）', category:'お酒', unit:'本', stores:['スーパー']},
+    {id:79, name:'缶エビスビール',   category:'お酒', unit:'缶', stores:['スーパー']},
+    {id:80, name:'恵那山',          category:'お酒', unit:'本', stores:['スーパー']},
+    {id:81, name:'鯨波',            category:'お酒', unit:'本', stores:['スーパー']},
+    {id:82, name:'ふかもり',        category:'お酒', unit:'本', stores:['スーパー']},
+    {id:83, name:'七笑',            category:'お酒', unit:'本', stores:['スーパー']},
+    {id:84, name:'女城主',          category:'お酒', unit:'本', stores:['スーパー']},
+    {id:85, name:'白真弓',          category:'お酒', unit:'本', stores:['スーパー']},
+    {id:86, name:'超辛口',          category:'お酒', unit:'本', stores:['スーパー']},
+    {id:87, name:'季節の日本酒',    category:'お酒', unit:'本', stores:['スーパー']},
+    {id:88, name:'梅酒',            category:'お酒', unit:'本', stores:['スーパー']},
+    {id:89, name:'黒糖',            category:'お酒', unit:'本', stores:['スーパー']},
+    {id:90, name:'ブランデー',      category:'お酒', unit:'本', stores:['スーパー']},
+    {id:91, name:'ゆず酒',          category:'お酒', unit:'本', stores:['スーパー']},
+    // ---- ドラッグストア ----
+    {id:92,  name:'ホイップ',               category:'乳製品・卵',  unit:'個', stores:['ドラッグストア']},
+    {id:93,  name:'ざらめ',                 category:'調味料・乾物',unit:'袋', stores:['ドラッグストア']},
+    {id:94,  name:'白砂糖',                 category:'調味料・乾物',unit:'袋', stores:['ドラッグストア']},
+    {id:95,  name:'サラダ油',               category:'調味料・乾物',unit:'本', stores:['ドラッグストア']},
+    {id:96,  name:'ドレッシング',           category:'調味料・乾物',unit:'本', stores:['ドラッグストア']},
+    {id:97,  name:'マヨネーズ',             category:'調味料・乾物',unit:'本', stores:['ドラッグストア']},
+    {id:98,  name:'あさげ',                 category:'調味料・乾物',unit:'袋', stores:['ドラッグストア']},
+    {id:99,  name:'カップラーメン',         category:'調味料・乾物',unit:'個', stores:['ドラッグストア']},
+    {id:100, name:'パン',                   category:'お菓子',      unit:'個', stores:['ドラッグストア']},
+    {id:101, name:'食パン',                 category:'乳製品・卵',  unit:'袋', stores:['ドラッグストア']},
+    {id:102, name:'ヨーグルト（DS）',       category:'乳製品・卵',  unit:'個', stores:['ドラッグストア']},
+    {id:103, name:'ソフトドリンク各種',     category:'飲み物',      unit:'本', stores:['ドラッグストア']},
+    {id:104, name:'缶チューハイ',           category:'お酒',        unit:'缶', stores:['ドラッグストア']},
+    {id:105, name:'ノンアルコール',         category:'飲み物',      unit:'本', stores:['ドラッグストア']},
+    {id:106, name:'お茶（箱）',             category:'飲み物',      unit:'箱', stores:['ドラッグストア']},
+    {id:107, name:'ポカリ',                 category:'飲み物',      unit:'箱', stores:['ドラッグストア']},
+    {id:108, name:'カフェオレ',             category:'飲み物',      unit:'本', stores:['ドラッグストア']},
+    {id:109, name:'ブライト',               category:'飲み物',      unit:'袋', stores:['ドラッグストア']},
+    {id:110, name:'ティッシュ（ソフト）',   category:'日用品',      unit:'箱', stores:['ドラッグストア']},
+    {id:111, name:'ティッシュ（BOX）',      category:'日用品',      unit:'箱', stores:['ドラッグストア']},
+    {id:112, name:'フリーザーバッグ（大）', category:'日用品',      unit:'袋', stores:['ドラッグストア']},
+    {id:113, name:'フリーザーバッグ（小）', category:'日用品',      unit:'袋', stores:['ドラッグストア']},
+    {id:114, name:'サランラップ（大）',     category:'日用品',      unit:'個', stores:['ドラッグストア']},
+    {id:115, name:'サランラップ（小）',     category:'日用品',      unit:'個', stores:['ドラッグストア']},
+    {id:116, name:'キッチンペーパー（厚）', category:'日用品',      unit:'個', stores:['ドラッグストア']},
+    {id:117, name:'キッチンペーパー（薄）', category:'日用品',      unit:'個', stores:['ドラッグストア']},
+    // ---- その他 ----
+    {id:118, name:'トマトジュース（道の駅）', category:'飲み物',      unit:'本', stores:['その他']},
+    {id:119, name:'クッキングペーパー（コメリ）',category:'日用品',  unit:'個', stores:['その他']},
+    {id:120, name:'田舎みそ（田瀬）',        category:'調味料・乾物',unit:'個', stores:['その他']},
+    {id:121, name:'地しょうゆ（田瀬）',      category:'調味料・乾物',unit:'本', stores:['その他']},
+    // ---- スーパー 野菜・果物 ----
+    {id:122, name:'大根',       category:'野菜・果物', unit:'本',    stores:['スーパー']},
+    {id:123, name:'ふき',       category:'野菜・果物', unit:'本',    stores:['スーパー']},
+    {id:124, name:'人参',       category:'野菜・果物', unit:'3本入', stores:['スーパー']},
+    {id:125, name:'大葉',       category:'野菜・果物', unit:'20枚入',stores:['スーパー']},
+    {id:126, name:'ごぼう',     category:'野菜・果物', unit:'2本入', stores:['スーパー']},
+    {id:127, name:'レモン',     category:'野菜・果物', unit:'個',    stores:['スーパー']},
+    {id:128, name:'ささぎ',     category:'野菜・果物', unit:'袋',    stores:['スーパー']},
+    {id:129, name:'白ねぎ',     category:'野菜・果物', unit:'3本入', stores:['スーパー']},
+    {id:130, name:'細ねぎ',     category:'野菜・果物', unit:'3本入', stores:['スーパー']},
+    {id:131, name:'かぼちゃ',   category:'野菜・果物', unit:'1/2個', stores:['スーパー']},
+    {id:132, name:'シイタケ',   category:'野菜・果物', unit:'6個入', stores:['スーパー']},
+    {id:133, name:'マイタケ',   category:'野菜・果物', unit:'2房入', stores:['スーパー']},
+    {id:134, name:'キクラゲ',   category:'野菜・果物', unit:'袋',    stores:['スーパー']},
+    {id:135, name:'きゅうり',   category:'野菜・果物', unit:'5本入', stores:['スーパー']},
+    {id:136, name:'ナメコ',     category:'野菜・果物', unit:'袋',    stores:['スーパー']},
+    {id:137, name:'シメジ',     category:'野菜・果物', unit:'袋',    stores:['スーパー']},
+    {id:138, name:'エリンギ',   category:'野菜・果物', unit:'袋',    stores:['スーパー']},
+    {id:139, name:'エノキ',     category:'野菜・果物', unit:'袋',    stores:['スーパー']},
+    {id:140, name:'ショウガ',   category:'野菜・果物', unit:'袋',    stores:['スーパー']},
+    {id:141, name:'トマト（2個入）', category:'野菜・果物', unit:'2個入', stores:['スーパー']},
+    {id:142, name:'プチトマト', category:'野菜・果物', unit:'袋',    stores:['スーパー']},
+    {id:143, name:'さつま芋',   category:'野菜・果物', unit:'袋',    stores:['スーパー']},
+    {id:144, name:'みょうが',   category:'野菜・果物', unit:'3本入', stores:['スーパー']},
+    {id:145, name:'みつば',     category:'野菜・果物', unit:'本',    stores:['スーパー']},
+    {id:146, name:'ほうれん草（袋）', category:'野菜・果物', unit:'袋', stores:['スーパー']},
+    {id:147, name:'小松菜',     category:'野菜・果物', unit:'袋',    stores:['スーパー']},
+    {id:148, name:'バナナ（房）',category:'野菜・果物', unit:'房',    stores:['スーパー']},
+    {id:149, name:'フルーツ',   category:'野菜・果物', unit:'袋',    stores:['スーパー']},
+    {id:150, name:'ししとう',   category:'野菜・果物', unit:'袋',    stores:['スーパー']},
+    {id:151, name:'山芋',       category:'野菜・果物', unit:'本',    stores:['スーパー']},
+    {id:152, name:'じゃがいも（袋）', category:'野菜・果物', unit:'袋', stores:['スーパー']},
+    {id:153, name:'玉ねぎ（袋）',category:'野菜・果物', unit:'袋',    stores:['スーパー']},
+    {id:154, name:'くるみ',     category:'野菜・果物', unit:'袋',    stores:['スーパー']},
+    // ---- スーパー その他食品 ----
+    {id:155, name:'ぜんまい',     category:'調味料・乾物', unit:'袋', stores:['スーパー']},
+    {id:156, name:'ろばた漬け',   category:'調味料・乾物', unit:'袋', stores:['スーパー']},
+    {id:157, name:'ぐーちゃん',   category:'調味料・乾物', unit:'袋', stores:['スーパー']},
+    {id:158, name:'白い漬物',     category:'調味料・乾物', unit:'袋', stores:['スーパー']},
+    {id:159, name:'紅しょうが',   category:'調味料・乾物', unit:'袋', stores:['スーパー']},
+    {id:160, name:'豆腐',         category:'乳製品・卵',   unit:'丁', stores:['スーパー']},
+    {id:161, name:'油揚げ',       category:'乳製品・卵',   unit:'袋', stores:['スーパー']},
+    {id:162, name:'栗ようかん',   category:'お菓子',       unit:'個', stores:['スーパー']},
+    {id:163, name:'2泊用茶菓子',  category:'お菓子',       unit:'袋', stores:['スーパー']},
+    {id:164, name:'ビールつまみ', category:'お菓子',       unit:'袋', stores:['スーパー']},
+    {id:165, name:'金平糖',       category:'お菓子',       unit:'袋', stores:['スーパー']},
+    // ---- スーパー 調味料 ----
+    {id:166, name:'唐からし',         category:'調味料・乾物', unit:'袋', stores:['スーパー']},
+    {id:167, name:'和からしチューブ', category:'調味料・乾物', unit:'本', stores:['スーパー']},
+    {id:168, name:'しょうがチューブ', category:'調味料・乾物', unit:'本', stores:['スーパー']},
+    {id:169, name:'にんにくチューブ', category:'調味料・乾物', unit:'本', stores:['スーパー']},
+    {id:170, name:'味付けのり',       category:'調味料・乾物', unit:'袋', stores:['スーパー']},
+    {id:171, name:'白だし',           category:'調味料・乾物', unit:'本', stores:['スーパー']},
+    {id:172, name:'酢',               category:'調味料・乾物', unit:'本', stores:['スーパー']},
+    {id:173, name:'調味のもと',       category:'調味料・乾物', unit:'袋', stores:['スーパー']},
+    {id:174, name:'料理酒',           category:'調味料・乾物', unit:'本', stores:['スーパー']},
+    {id:175, name:'ヤマコノ醤油',     category:'調味料・乾物', unit:'本', stores:['スーパー']},
+    // ---- スーパー 飲み物 ----
+    {id:176, name:'骨酒用酒',         category:'お酒',  unit:'本', stores:['スーパー']},
+    {id:177, name:'みかん缶ジュース', category:'飲み物', unit:'缶', stores:['スーパー']},
 ];
 
 // =============================================
