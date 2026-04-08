@@ -677,6 +677,15 @@ async function fbSet(path, data) {
 // =============================================
 // STORAGE（localStorage + Firebase）
 // =============================================
+function mergeDefaultItems() {
+    // DEFAULT_ITEMSの中でまだitemsにないものを追加する
+    const existingIds = new Set(items.map(i => i.id));
+    const missing = DEFAULT_ITEMS.filter(i => !existingIds.has(i.id));
+    if (missing.length > 0) {
+        items = [...items, ...missing.map(i => ({...i}))];
+    }
+}
+
 function loadLocal() {
     try {
         const si = localStorage.getItem('sq_items');
@@ -687,6 +696,7 @@ function loadLocal() {
         session = ss ? JSON.parse(ss) : {};
         nextId  = sn ? parseInt(sn) : (Math.max(0, ...items.map(i => i.id)) + 1);
         memo    = sm || '';
+        mergeDefaultItems(); // 新しいデフォルト商品を自動追加
     } catch(e) {
         items = DEFAULT_ITEMS.map(i => ({...i}));
         session = {}; nextId = 200; memo = '';
@@ -726,6 +736,7 @@ async function loadFromFirebase() {
         if (typeof data.memo === 'string') memo = data.memo;
         if (Array.isArray(data.items) && data.items.length > 0) items = data.items;
         if (data.nextId) nextId = data.nextId;
+        mergeDefaultItems(); // 新しいデフォルト商品を自動追加
         saveLocal();
         return true;
     } catch(e) {
