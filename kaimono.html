@@ -125,6 +125,8 @@
             display: flex; align-items: center;
             padding: 10px 14px; border-bottom: 1px solid var(--sep);
             gap: 10px; transition: background 0.15s; min-height: 60px;
+            user-select: none; -webkit-user-select: none;
+            -webkit-touch-callout: none;
         }
         .item-row:last-child { border-bottom: none; }
         .item-row.checked { background: var(--checked-bg); }
@@ -408,7 +410,11 @@
             <div class="modal-title">共有・同期</div>
             <button class="modal-close" onclick="hideModal('shareModal')">✕</button>
         </div>
-        <p class="info-text">マスターリストをJSON形式でエクスポートし、他のデバイスでインポートすることで共有できます。<br>チェック・メモはFirebaseでリアルタイム同期されます 🔄</p>
+        <p class="info-text">このURLを家族に送るだけで、同じリストをリアルタイムで共有できます 🔄</p>
+        <button class="btn-primary" onclick="copyAppUrl()" style="margin-bottom:10px;">
+            🔗 アプリのURLをコピー
+        </button>
+        <hr class="modal-divider">
         <button class="btn-primary" onclick="exportData()" style="margin-bottom:10px;">
             📤 マスターリストをコピー
         </button>
@@ -975,6 +981,17 @@ function showShareModal() {
     showModal('shareModal');
 }
 
+function copyAppUrl() {
+    const url = location.href;
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(url)
+            .then(() => toast('URLをコピーしました！LINEなどで送ってください'))
+            .catch(() => { prompt('このURLをコピーしてください', url); });
+    } else {
+        prompt('このURLをコピーしてください', url);
+    }
+}
+
 function exportData() {
     const data = JSON.stringify({ items, nextId });
     if (navigator.clipboard) {
@@ -1194,6 +1211,7 @@ async function init() {
     initMemo();
     render();
     startPolling();
+    saveSessionToFirebase(); // 起動時に商品リストをFirebaseへ即時送信
 
     document.addEventListener('touchmove', dragTouchMove, { passive: false });
     document.addEventListener('touchend', dragEnd);
@@ -1204,3 +1222,4 @@ init();
 </script>
 </body>
 </html>
+
