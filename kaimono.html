@@ -1135,30 +1135,37 @@ function dragEnd() {
     clearTimeout(_lpTimer); _lpTimer = null;
     if (!_drag) return;
 
-    // プレースホルダーの位置から新しい順序を確定
+    const draggedId = _drag.id;
     const ph = _drag.ph;
-    const section = ph.closest('.section');
-    if (section) {
-        const draggedId = _drag.id;
-        const draggedItem = items.find(i => i.id === draggedId);
-        const cat = draggedItem?.category;
 
-        // セクション内の全要素（行＋プレースホルダー）を順番に取得
-        const children = [...ph.parentNode.children];
-        const newIds = [];
-        for (const el of children) {
-            if (el === ph) {
-                newIds.push(draggedId);
-            } else if (el.classList.contains('item-row')) {
-                const rid = parseInt(el.id.replace('row-',''));
-                if (rid !== draggedId) newIds.push(rid);
-            }
+    // プレースホルダーの直後にある item-row を探す（挿入位置の基準）
+    let insertBeforeId = null;
+    let sib = ph.nextElementSibling;
+    while (sib) {
+        if (sib.classList.contains('item-row') && sib !== _drag.row) {
+            insertBeforeId = parseInt(sib.id.replace('row-', ''));
+            break;
         }
+        sib = sib.nextElementSibling;
+    }
 
-        // items配列内の該当カテゴリだけ順序入れ替え
-        let ci = 0;
-        const newCatOrder = newIds.map(id => items.find(i => i.id === id)).filter(Boolean);
-        items = items.map(item => item.category === cat ? newCatOrder[ci++] : item);
+    // dragged itemをitemsから取り出して新しい位置に挿入
+    const draggedItem = items.find(i => i.id === draggedId);
+    if (draggedItem) {
+        items = items.filter(i => i.id !== draggedId);
+        if (insertBeforeId !== null) {
+            const idx = items.findIndex(i => i.id === insertBeforeId);
+            if (idx !== -1) {
+                items.splice(idx, 0, draggedItem);
+            } else {
+                items.push(draggedItem);
+            }
+        } else {
+            // プレースホルダーが末尾 → 同カテゴリの末尾に移動
+            const cat = draggedItem.category;
+            const lastCatIdx = items.reduce((acc, item, i) => item.category === cat ? i : acc, -1);
+            items.splice(lastCatIdx + 1, 0, draggedItem);
+        }
     }
 
     _drag.ghost.remove();
